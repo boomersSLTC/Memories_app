@@ -2,21 +2,52 @@ import * as api from '../api'; //import everything as api
 // we do this because theres a lot of posts exported from the api
 
 // Action Creators- functions that return actions
-export const getPosts = () => async (dispatch) => { //to fetch all posts time taken is long so it should be done asynchronouslyly
+export const getPosts = (page) => async (dispatch) => { //to fetch all posts time taken is long so it should be done asynchronouslyly
     //so => async (dispatch) is added, we create a function that returns another function
     try {
+        dispatch({type: 'START_LOADING'});
         //response from backend is data here, we catch that and get the posts
-        const { data } = await api.fetchPosts();
-
+        const { data } = await api.fetchPosts(page);
+        
         dispatch({type: "FETCH_ALL", payload: data}); //instead of returning a action, in redux thunk we dispatch the action
+        dispatch({type: 'END_LOADING'});
     } catch (error) {
         console.log(error.message);
     }
 }
 
-export const createPost = (post) => async (dispatch) => { //to create a post time taken is long so it should be done asynchronouslyly
+export const getPost = (id) => async (dispatch) => {
     try {
+        dispatch({type: 'START_LOADING'});
+        //response from backend is data here, we catch that and get the posts
+        const { data } = await api.fetchPost(id);
+        
+        dispatch({type: "FETCH_POST", payload: data}); //instead of returning a action, in redux thunk we dispatch the action
+        dispatch({type: 'END_LOADING'});
+    } catch (error) {
+        console.log(error.message);
+    }
+}
+
+
+export const getPostsBySearch = (searchQuery) => async (dispatch) => {
+    try {
+        dispatch({type: 'START_LOADING'});
+        const { data: { data } } = await api.fetchPostsBySearch(searchQuery);
+  
+        dispatch({ type: "FETCH_BY_SEARCH", payload:  data });
+        dispatch({type: 'END_LOADING'});
+    } catch (error) {
+        console.log(error);
+    }
+};
+
+export const createPost = (post, history) => async (dispatch) => { //to create a post time taken is long so it should be done asynchronouslyly
+    try {
+        dispatch({type: 'START_LOADING'});
         const {data} = await api.createPost(post);
+
+        history(`/posts/${data._id}`)
 
         dispatch({type: "CREATE", payload: data})
     } catch (error) {

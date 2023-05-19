@@ -10,10 +10,8 @@ const auth = async(req,res,next) => {//next means do something then move to the 
 
         if(token && isCustomAuth) {
             decodedData = jwt.verify(token, 'test');//decode the token from res.creditionals from front end using JWT
-            console.log(decodedData);
             req.userId = decodedData?.id;
         } else { //if this is the googles token
-            console.log(token);
             decodedData = jwt.decode(token);
 
             req.userId = decodedData?.sub; //sub to make sure we different googles accounts from each other

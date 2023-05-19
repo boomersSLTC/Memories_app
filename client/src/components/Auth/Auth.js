@@ -46,8 +46,6 @@ const Auth = () => {
         //the question next to res makes sure that we don't get an error in case we dont have res
         const result = decode(res?.credential);
         const token = res?.credential;
-        console.log(token);
-        console.log(token);
 
         try {
             dispatch({type: 'AUTH', data: {result,token} });

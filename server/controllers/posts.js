@@ -1,15 +1,50 @@
 import mongoose from 'mongoose';
 import PostMessage from '../models/postMessage.js';
 
-export const getPosts = async (req, res) => {
-    try{
-        const postMessages = await PostMessage.find();// await is used because finding things inside a model takes time so an async actions is needed that is added in the function begining
-        //finds all the posts
-        //console.log(postMessages);
+export const getPost = async (req, res) => {
+    const {id} = req.params
 
-        res.status(200).json(postMessages);
+    try {
+        const post = await PostMessage.findById(id);
+        
+        res.status(200).json(post);
+    } catch (error) {
+        res.status(404).json({message: error.message});
+    }
+}
+
+export const getPosts = async (req, res) => {
+    const {page} = req.query; 
+    try{ 
+
+        const LIMIT = 8; //no. of posts per page
+        const startIndex = (Number(page)-1) *  LIMIT; // getting the start index of everypage
+        
+        const total = await PostMessage.countDocuments({});//we need to know how many documents are there, to make sure the proper pages numbers are seen
+        //sort({_id:-1}) gives us the newest post 
+        const posts = await PostMessage.find().sort({ _id: -1 }).limit(LIMIT).skip(startIndex);// await is used because finding things inside a model takes time so an async actions is needed that is added in the function begining
+        //finds all the posts
+
+        res.status(200).json({data: posts, currentPage: Number(page), numberOfPages: Math.ceil( total / LIMIT )});
     } catch(error){
         res.status(404).json({message: error.message});
+    }
+}
+//Query = > /posts?page1 => page = 1 //when tryung to query data we use query
+//PARAMS = > /posts/123 => id = 2 when trying to get a resource we use params
+export const getPostsBySearch = async (req, res) => {
+    const {searchQuery, tags} = req.query; 
+
+    try {
+        const title = new RegExp(searchQuery, "i"); //i makes sure it doesnt care about capitals when searching
+        
+        const posts = await PostMessage.find({ $or: [ { title }, { tags: { $in: tags.split(',') } } ]});//or stands for either find title or tag
+    
+        res.json({ data: posts });
+
+    } catch (error) {
+        res.status(404).json({message: error.message});
+        
     }
 }
 
@@ -51,9 +86,6 @@ export const deletePost = async (req, res) => {
 
 export const likePost = async (req, res) => {
     const { id } = req.params;
-    console.log('stat');
-   // console.log(req);
-    console.log(id,'test');
     if (!req.userId) return res.json({ message: "Unauthenticated: Create an account"});
 
     if (!mongoose.Types.ObjectId.isValid(id)) return res.status(404).send(`No post with id: ${id}`);
